@@ -1,0 +1,553 @@
+:root {
+    --primary: #0066da;
+    --green: #4caf50;
+    --purple: #673ab7;
+    --orange: #ff9800;
+    --bg-light: #f8fbff;
+    --text-dark: #1a2b3c;
+    --text-muted: #5e6d7a;
+    --shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+    color: var(--text-dark);
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+
+/* ========== HEADER ========== */
+
+header {
+    padding: 15px 0;
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+    list-style: none;
+}
+
+.nav-links a {
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    transition: 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--primary);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.icon-btn {
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.icon-btn:hover {
+    color: var(--primary);
+}
+
+
+/* ========== USER DROPDOWN ========== */
+
+.user-dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: white;
+    min-width: 200px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    border: 1px solid #eee;
+    z-index: 1100;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: var(--text-dark);
+    padding: 12px 20px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.dropdown-content a i {
+    width: 20px;
+    text-align: center;
+}
+
+.dropdown-content a:hover {
+    background: var(--bg-light);
+    color: var(--primary);
+}
+
+.dropdown-content.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.user-info-header {
+    padding: 15px 20px;
+    background-color: #f0f7ff;
+    display: flex;
+    flex-direction: column;
+}
+
+.welcome-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 2px;
+}
+
+.menu-divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 5px 0;
+}
+
+.logout-link {
+    color: #e74c3c !important;
+}
+
+.logout-link:hover {
+    background-color: #fff5f5 !important;
+}
+
+.btn-booking {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+
+/* ========== HERO ========== */
+
+.hero {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    padding: 80px 0;
+}
+
+.hero-content {
+    flex: 1;
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.hero-content h1 span {
+    color: var(--primary);
+}
+
+.hero-content p {
+    font-size: 18px;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+
+.hero-btns {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-main {
+    background: var(--primary);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-sub {
+    background: #f0f4f8;
+    color: var(--text-dark);
+    padding: 14px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.hero-image {
+    flex: 1;
+    position: relative;
+}
+
+.hero-image img {
+    width: 100%;
+    border-radius: 40px 40px 40px 160px;
+    box-shadow: var(--shadow);
+}
+
+.floating-card {
+    position: absolute;
+    bottom: 30px;
+    left: -20px;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.floating-card i {
+    color: var(--primary);
+    font-size: 24px;
+}
+
+
+/* ========== SEARCH BAR ========== */
+
+.search-container {
+    background: white;
+    padding: 28px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+    margin-top: -60px;
+    position: relative;
+}
+
+.search-container form {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.search-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-item label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.search-input {
+    background: #f1f5f9;
+    border: 1.5px solid transparent;
+    padding: 11px 14px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.search-input:focus-within {
+    background: #fff;
+    border-color: var(--primary);
+}
+
+.search-input i {
+    color: var(--primary);
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.search-input input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.search-input input::placeholder {
+    color: #aab5bf;
+}
+
+.btn-search {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    height: 46px;
+    transition: opacity 0.2s;
+}
+
+.btn-search:hover {
+    opacity: 0.88;
+}
+
+
+/* ========== SERVICES ========== */
+
+.services-section {
+    background: var(--bg-light);
+    padding: 80px 0;
+}
+
+.section-tag {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.section-title {
+    font-size: 32px;
+    margin-bottom: 40px;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.service-card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    border-left: 5px solid transparent;
+    transition: 0.3s;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+}
+
+.service-card i {
+    font-size: 28px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.service-card h4 {
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+.service-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.service-card a {
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.blue  { border-color: var(--primary); } .blue  i, .blue  a { color: var(--primary); }
+.green { border-color: var(--green);   } .green i, .green a { color: var(--green);   }
+.purple{ border-color: var(--purple);  } .purple i,.purple a{ color: var(--purple);  }
+.orange{ border-color: var(--orange);  } .orange i,.orange a{ color: var(--orange);  }
+
+
+/* ========== FOOTER ========== */
+
+footer {
+    padding: 40px 0;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    border-top: 1px solid #eee;
+}
+
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 992px) {
+    .hero {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-btns {
+        justify-content: center;
+    }
+
+    .search-container {
+        margin-top: 20px;
+    }
+
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .nav-links {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .search-container form {
+        flex-direction: column;
+    }
+
+    .search-item {
+        min-width: 100%;
+    }
+
+    .btn-search {
+        width: 100%;
+        justify-content: center;
+    }
+}
+ /* PHẦN QUAN TRỌNG: CSS ĐỂ MENU CÓ THỂ XỔ XUỐNG */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none; /* Mặc định ẩn */
+            position: absolute;
+            right: 0;
+            background-color: #ffffff;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 999;
+            border-radius: 8px;
+            padding: 10px 0;
+            margin-top: 10px;
+            border: 1px solid #eee;
+        }
+
+        /* Khi có class .show (do JS thêm vào) thì hiện menu */
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+            color: #00a389;
+        }
+
+        .user-info-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 5px;
+        }
+
+        .user-name {
+            display: block;
+            font-weight: bold;
+            color: #00a389;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 5px 0;
+        }
+
+        .logout-link {
+            color: #ff4d4d !important;
+        }
+
+        /* Style cho ô input tìm kiếm */
+        .search-input input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+        }
+        
+        .icon-btn {
+            cursor: pointer;
+            font-size: 20px;
+        }

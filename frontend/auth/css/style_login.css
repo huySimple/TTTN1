@@ -1,0 +1,246 @@
+:root {
+    --primary-blue: #0066da;
+    --dark-blue: #0056b3;
+    --bg-light: #f4f7f9;
+    --text-main: #333;
+    --text-muted: #666;
+    --border-color: #e0e6ed;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #cbdbe6; /* Màu nền nhẹ phía sau card */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 1100px;
+}
+
+.login-card {
+    background: white;
+    display: flex;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    min-height: 650px;
+}
+
+/* Phần bên trái */
+.info-side {
+    background-color: var(--primary-blue);
+    color: white;
+    flex: 1;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: -0.5px;
+}
+
+.info-content h1 {
+    font-size: 36px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.info-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.hipaa-badge {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: fit-content;
+}
+
+.hipaa-badge i {
+    font-size: 24px;
+    color: var(--primary-blue);
+}
+
+.hipaa-badge div span {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Phần bên phải */
+.form-side {
+    flex: 1;
+    padding: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.form-wrapper {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 40px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+label {
+    font-size: 14px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.forgot-link {
+    font-size: 12px;
+    color: var(--primary-blue);
+    text-decoration: none;
+}
+
+.input-field {
+    background: #eef2f6;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+}
+
+.input-field i {
+    color: #99aab5;
+}
+
+.input-field input {
+    background: transparent;
+    border: none;
+    padding: 15px 10px;
+    width: 100%;
+    outline: none;
+    font-size: 14px;
+}
+
+.remember-me {
+    display: flex;
+    align-items:stretch;
+    gap: 10px;
+    margin-bottom: 30px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.btn-login {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.btn-login:hover {
+    background: var(--dark-blue);
+}
+
+.register-text {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 14px;
+}
+
+.register-text a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.form-footer {
+    margin-top: 50px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.form-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+/* Footer chân trang */
+.page-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    font-size: 11px;
+    color: #777;
+    text-transform: uppercase;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: #4caf50;
+    border-radius: 50%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .login-card {
+        flex-direction: column;
+    }
+    .info-side {
+        padding: 40px;
+    }
+}
