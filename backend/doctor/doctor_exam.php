@@ -40,8 +40,29 @@ if (isset($_GET['id'])) {
     exit();
 }
 
-// 2. Xử lý khi Bác sĩ bấm "Lưu kết quả khám"
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+// 2. API xử lý AJAX chuyển trạng thái nhanh (DaDen, DangKham)
+if (isset($_POST['action']) && $_POST['action'] === 'update_status') {
+    header('Content-Type: application/json; charset=utf-8');
+    $new_status = $conn->real_escape_string($_POST['status']);
+    
+    if (in_array($new_status, ['DaXacNhan', 'DaDen', 'DangKham'])) {
+        $update_sql = "UPDATE lichhen SET TrangThai = '$new_status' WHERE MaLichHen = '$ma_lh'";
+        if ($new_status === 'DangKham') {
+            $update_sql = "UPDATE lichhen SET TrangThai = 'DangKham', ThoiGianBatDauKham = NOW() WHERE MaLichHen = '$ma_lh'";
+        }
+        if ($conn->query($update_sql)) {
+            echo json_encode(['success' => true, 'message' => 'Cập nhật trạng thái thành công!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Không thể cập nhật trạng thái.']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Trạng thái không hợp lệ.']);
+    }
+    exit();
+}
+
+// 3. Xử lý khi Bác sĩ bấm "Lưu kết quả khám"
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['action'])) {
     // Chỉ số sinh tồn
     $can_nang = !empty($_POST['CanNang']) ? "'" . $conn->real_escape_string($_POST['CanNang']) . "'" : "NULL";
     $chieu_cao = !empty($_POST['ChieuCao']) ? "'" . $conn->real_escape_string($_POST['ChieuCao']) . "'" : "NULL";
@@ -152,10 +173,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <span class="info-label">Mã lịch hẹn:</span>
             <span class="info-value">#<?= $appointment['MaLichHen'] ?></span>
         </div>
+        
         <div class="info-row">
             <span class="info-label">Trạng thái:</span>
-            <span class="status-tag <?= $appointment['TrangThai'] ?>"><?= $appointment['TrangThai'] ?></span>
+            <span class="info-value">
+                <?php if (in_array($appointment['TrangThai'], ['DaXacNhan', 'DaDen', 'DangKham'])): ?>
+                    <select class="status-dropdown" id="updateStatusSelect">
+                        <option value="DaXacNhan" <?= $appointment['TrangThai'] == 'DaXacNhan' ? 'selected' : '' ?>>Đã xác nhận</option>
+                        <option value="DaDen" <?= $appointment['TrangThai'] == 'DaDen' ? 'selected' : '' ?>>Đã đến</option>
+                        <option value="DangKham" <?= $appointment['TrangThai'] == 'DangKham' ? 'selected' : '' ?>>Đang khám</option>
+                    </select>
+                    <span id="statusToast" class="status-success-toast"><i class="fas fa-check"></i> Đã cập nhật</span>
+                <?php else: ?>
+                    <span class="status-tag <?= $appointment['TrangThai'] ?>"><?= $appointment['TrangThai'] ?></span>
+                <?php endif; ?>
+            </span>
         </div>
+
         <div class="info-row">
             <span class="info-label">Ngày hẹn:</span>
             <span class="info-value"><?= date('d/m/Y H:i', strtotime($appointment['NgayHen'])) ?></span>
@@ -269,6 +303,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const statusSelect = document.getElementById('updateStatusSelect');
+    const statusToast = document.getElementById('statusToast');
+
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            const newStatus = this.value;
+
+            // Dùng FormData để gửi POST dữ liệu qua fetch (AJAX)
+            const formData = new FormData();
+            formData.append('action', 'update_status');
+            formData.append('status', newStatus);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hiển thị chữ "Đã cập nhật" màu xanh lá
+                    statusToast.style.display = 'inline';
+                    setTimeout(() => {
+                        statusToast.style.display = 'none';
+                    }, 2000);
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã có lỗi xảy ra khi kết nối tới máy chủ.');
+            });
+        });
+    }
+});
+</script>
 
 </body>
 </html>

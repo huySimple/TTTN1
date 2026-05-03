@@ -15,11 +15,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ma_ck = !empty($_POST['MaChuyenKhoa']) ? "'" . $conn->real_escape_string($_POST['MaChuyenKhoa']) . "'" : "NULL";
     $trang_thai = $conn->real_escape_string($_POST['TrangThai']);
     $gioi_thieu = !empty($_POST['gioithieu_banthan']) ? "'" . $conn->real_escape_string($_POST['gioithieu_banthan']) . "'" : "NULL";
-    $anh_dai_dien = !empty($_POST['anh_dai_dien']) ? "'" . $conn->real_escape_string($_POST['anh_dai_dien']) . "'" : "NULL";
+
+    // Mặc định ban đầu ảnh đại diện là NULL
+    $anh_dai_dien_path = "NULL";
+
+    // Xử lý Upload file ảnh từ máy tính
+    if (isset($_FILES['anh_dai_dien']) && $_FILES['anh_dai_dien']['error'] == 0) {
+        $file_name = $_FILES['anh_dai_dien']['name'];
+        $file_size = $_FILES['anh_dai_dien']['size'];
+        $file_tmp  = $_FILES['anh_dai_dien']['tmp_name'];
+        
+        // Lấy đuôi file (extension)
+        $ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        // Kiểm tra định dạng file ảnh hợp lệ
+        if (!in_array($ext, $allowed_extensions)) {
+            $error = "Chỉ cho phép tải lên các định dạng ảnh: " . implode(', ', $allowed_extensions);
+        }
+        // Kiểm tra kích thước file (Giới hạn tối đa 2MB)
+        elseif ($file_size > 2 * 1024 * 1024) {
+            $error = "Kích thước ảnh quá lớn! Vui lòng chọn ảnh dưới 2MB.";
+        } else {
+            // Đổi tên file để tránh bị trùng lặp
+            $new_file_name = "doctor_" . time() . "_" . rand(100, 999) . "." . $ext;
+            
+            // Đường dẫn lưu file trên máy chủ
+            $upload_dir = '../../frontend/admin/uploads/';
+            
+            // Tạo thư mục nếu nó chưa tồn tại
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+
+            $target_file = $upload_dir . $new_file_name;
+
+            // Di chuyển file tạm vào thư mục lưu trữ
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                // Đường dẫn tương đối lưu vào Database
+                $db_path = "uploads/" . $new_file_name;
+                $anh_dai_dien_path = "'" . $conn->real_escape_string($db_path) . "'";
+            } else {
+                $error = "Không thể lưu file ảnh lên máy chủ.";
+            }
+        }
+    }
 
     if (empty($ho_ten) || empty($email) || empty($mat_khau)) {
         $error = "Vui lòng nhập đầy đủ Họ tên, Email và Mật khẩu!";
-    } else {
+    } elseif (empty($error)) {
         // Kiểm tra xem Email đã tồn tại trong bảng users chưa
         $check_email = $conn->query("SELECT MaUser FROM users WHERE Email = '$email'");
         if ($check_email->num_rows > 0) {
@@ -36,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // 2. Chèn thông tin vào bảng bacsi
                 $sql_doctor = "INSERT INTO bacsi (MaUser, HoTen, SoDienThoai, MaChuyenKhoa, TrangThai, anh_dai_dien, gioithieu_banthan) 
-                               VALUES ($ma_user, '$ho_ten', $sdt, $ma_ck, '$trang_thai', $anh_dai_dien, $gioi_thieu)";
+                               VALUES ($ma_user, '$ho_ten', $sdt, $ma_ck, '$trang_thai', $anh_dai_dien_path, $gioi_thieu)";
                 $conn->query($sql_doctor);
 
                 $conn->commit();
@@ -70,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <?php if ($error): ?><div class="alert alert-error"><?= $error ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
 
-    <form method="POST" action="">
+    <form method="POST" action="" enctype="multipart/form-data">
         <div class="form-grid">
             <div class="form-group full-width" style="border-bottom: 1px dashed #ddd; padding-bottom: 10px;">
                 <strong><i class="fas fa-key"></i> Thông tin tài khoản</strong>
@@ -119,10 +163,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </select>
             </div>
 
-            <!-- <div class="form-group">
-                <label>Đường dẫn Ảnh đại diện (URL)</label>
-                <input type="text" name="anh_dai_dien" placeholder="http://localhost:8000/storage/avatars/...">
-            </div> -->
+            <div class="form-group full-width">
+                <label>Ảnh đại diện bác sĩ</label>
+                <div class="img-upload-container">
+                    <img id="imgPreview" src="https://via.placeholder.com/150" alt="Preview" class="preview-img">
+                    
+                    <div>
+                        <input type="file" name="anh_dai_dien" id="fileInput" accept="image/*">
+                        <small style="color: #64748b; display: block; margin-top: 5px;">Hỗ trợ: JPG, PNG, GIF, WEBP. Kích thước tối đa 2MB.</small>
+                    </div>
+                </div>
+            </div>
 
             <div class="form-group full-width">
                 <label>Giới thiệu bản thân</label>
@@ -136,6 +187,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </form>
 </div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const imgPreview = document.getElementById('imgPreview');
+
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imgPreview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
 
 </body>
 </html>

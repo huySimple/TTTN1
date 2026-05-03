@@ -58,9 +58,9 @@ try {
         .doctor-image {
             width: 100%;
             height: 250px;
-            object-fit: contain; /* Hiển thị toàn bộ ảnh */
-            object-position: center; /* Canh giữa */
-            background: #f8fafc; /* nền cho đẹp nếu ảnh không full */
+            object-fit: contain;      
+            object-position: center;  
+            background: #f8fafc;
         }
         .doctor-info {
             padding: 20px;
@@ -143,8 +143,23 @@ try {
     <div class="doctors-grid">
         <?php if (!empty($bacSis)): ?>
             <?php foreach ($bacSis as $bs): ?>
+                <?php 
+                    // XỬ LÝ ĐƯỜNG DẪN ẢNH TẠI ĐÂY:
+                    $img_src = 'https://via.placeholder.com/300x250?text=Doctor'; // Ảnh mặc định
+
+                    if (!empty($bs['anh_dai_dien'])) {
+                        // Nếu là một liên kết URL bên ngoài (bắt đầu bằng http:// hoặc https://)
+                        if (strpos($bs['anh_dai_dien'], 'http://') === 0 || strpos($bs['anh_dai_dien'], 'https://') === 0) {
+                            $img_src = $bs['anh_dai_dien'];
+                        } else {
+                            // Nếu là ảnh được tải lên từ Admin (lưu dạng uploads/ten_file.jpg)
+                            // Cần trỏ đúng vào thư mục admin chứa ảnh
+                            $img_src = '../frontend/admin/' . $bs['anh_dai_dien'];
+                        }
+                    }
+                ?>
                 <div class="doctor-card">
-                    <img src="<?php echo !empty($bs['anh_dai_dien']) ? htmlspecialchars($bs['anh_dai_dien']) : 'https://via.placeholder.com/300x250?text=Doctor'; ?>" 
+                    <img src="<?php echo htmlspecialchars($img_src); ?>" 
                          alt="<?php echo htmlspecialchars($bs['HoTen']); ?>" class="doctor-image">
                     <div class="doctor-info">
                         <h3><?php echo htmlspecialchars($bs['HoTen']); ?></h3>
