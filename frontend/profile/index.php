@@ -7,10 +7,45 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Giả sử bạn đã session_start() và include connect.php ở đầu file
+// Xử lý logic Đăng xuất
+if (isset($_GET['action']) && $_GET['action'] == 'logout') {
+    session_unset();
+    session_destroy();
+    header("Location: ../auth/login.php");
+    exit();
+}
+
 $user_id = $_SESSION['user_id'];
 
-// 1. Lấy MaBenhNhan từ MaUser (Vì bảng lichhen dùng MaBenhNhan làm khóa ngoại)
+// 1. Xử lý logic Hủy lịch hẹn khi người dùng bấm nút Hủy
+if (isset($_GET['cancel_id'])) {
+    $cancel_id = intval($_GET['cancel_id']);
+    
+    // Kiểm tra xem lịch hẹn đó có đúng là của bệnh nhân này không và có trạng thái hợp lệ để hủy
+    $stmt_check = $conn->prepare("
+        SELECT lh.MaLichHen FROM lichhen lh 
+        JOIN benhnhan bn ON lh.MaBenhNhan = bn.MaBenhNhan 
+        WHERE lh.MaLichHen = ? AND bn.MaUser = ? AND lh.TrangThai IN ('ChoXacNhan', 'DaXacNhan')
+    ");
+    $stmt_check->bind_param("ii", $cancel_id, $user_id);
+    $stmt_check->execute();
+    $res_check = $stmt_check->get_result();
+    
+    if ($res_check->num_rows > 0) {
+        // Cập nhật trạng thái thành DaHuy
+        $stmt_cancel = $conn->prepare("UPDATE lichhen SET TrangThai = 'DaHuy' WHERE MaLichHen = ?");
+        $stmt_cancel->bind_param("i", $cancel_id);
+        if ($stmt_cancel->execute()) {
+            $_SESSION['msg_success'] = "Hủy lịch hẹn thành công!";
+        } else {
+            $_SESSION['msg_error'] = "Có lỗi xảy ra khi hủy lịch!";
+        }
+    }
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+// 2. Lấy MaBenhNhan từ MaUser (Vì bảng lichhen dùng MaBenhNhan làm khóa ngoại)
 $stmt_bn = $conn->prepare("SELECT MaBenhNhan FROM benhnhan WHERE MaUser = ?");
 $stmt_bn->bind_param("i", $user_id);
 $stmt_bn->execute();
@@ -21,7 +56,7 @@ $history_res = null;
 if ($benhnhan) {
     $maBN = $benhnhan['MaBenhNhan'];
     
-    // 2. Truy vấn danh sách lịch hẹn
+    // Truy vấn danh sách lịch hẹn
     $sql_history = "SELECT lh.*, bs.HoTen as TenBacSi, ck.TenChuyenKhoa 
                     FROM lichhen lh
                     JOIN bacsi bs ON lh.MaBacSi = bs.MaBacSi
@@ -34,20 +69,17 @@ if ($benhnhan) {
     $history_res = $stmt_h->get_result();
 }
 
-
-$maUser = $_SESSION['user_id'];
-
-// 1. Lấy thông tin bệnh nhân
+// Lấy thông tin bệnh nhân đầy đủ
 $sql_user = "SELECT u.Email, b.* FROM users u 
              LEFT JOIN benhnhan b ON u.MaUser = b.MaUser 
-             WHERE u.MaUser = $maUser";
+             WHERE u.MaUser = $user_id";
 $res_user = $conn->query($sql_user);
 $user_data = $res_user->fetch_assoc();
 
 if (!$user_data) { die("Không tìm thấy dữ liệu người dùng."); }
 $maBN = $user_data['MaBenhNhan'];
 
-// 2. Truy vấn Lịch sử khám chi tiết (Bổ sung thêm TrieuChung, LoiKhuyen, DonThuoc)
+// Truy vấn Lịch sử khám chi tiết (Bổ sung thêm TrieuChung, LoiKhuyen, DonThuoc)
 $sql_history = "SELECT k.*, bs.HoTen as TenBacSi, ck.TenChuyenKhoa, lh.NgayHen
                 FROM ketquakham k
                 JOIN lichhen lh ON k.MaLichHen = lh.MaLichHen
@@ -61,97 +93,114 @@ $res_history = $conn->query($sql_history);
 $latest_exam = ($res_history && $res_history->num_rows > 0) ? $res_history->fetch_assoc() : null;
 if($res_history) $res_history->data_seek(0); // Trả con trỏ về đầu để lặp danh sách bên dưới
 
-// 3. Lấy lịch hẹn đang chờ xác nhận và đã xác nhận
-$sql_appointments = "SELECT lh.MaLichHen, lh.NgayHen, lh.TrangThai, 
-                      bs.HoTen as TenBacSi, ck.TenChuyenKhoa
-                      FROM lichhen lh
-                      JOIN bacsi bs ON lh.MaBacSi = bs.MaBacSi
-                      LEFT JOIN chuyenkhoa ck ON bs.MaChuyenKhoa = ck.MaChuyenKhoa
-                      WHERE lh.MaBenhNhan = '$maBN' 
-                      AND lh.TrangThai IN ('cho', 'xacnhan')
-                      ORDER BY lh.NgayHen ASC";
-$res_appointments = $conn->query($sql_appointments);
 ?>
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hồ sơ cá nhân - <?php echo htmlspecialchars($user_data['HoTen']); ?></title>
+    <title>Hồ sơ cá nhân - <?php echo htmlspecialchars($user_data['HoTen'] ?? 'Bệnh nhân'); ?></title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
+        .logout-link { color: #e53e3e; font-weight: bold; padding: 12px 20px; text-decoration: none; display: flex; align-items: center; gap: 10px; margin-top: 15px; border-radius: 8px; transition: background 0.2s; }
+        .logout-link:hover { background: #fff5f5; }
+        .btn-cancel { display: inline-block; background-color: #e53e3e; color: white; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; text-decoration: none; font-weight: bold; cursor: pointer; margin-top: 5px; transition: background 0.2s;}
+        .btn-cancel:hover { background-color: #c53030; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75em; font-weight: bold; color: white; display: inline-block; }
+        .status-hoanthanh { background-color: #38a169; }
+        .status-choxacnhan { background-color: #dd6b20; }
+        .status-dahuy { background-color: #718096; }
+        .status-default { background-color: #a0aec0; }
+    </style>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <h2>Phòng khám TH</h2>
-            <nav>
-                <ul>
-                    <li><a href="../../index.php"><i class="fas fa-home"></i> Trang chủ</a></li>
-                    <li class="active"><a href="#"><i class="fas fa-id-card"></i> Hồ sơ</a></li>
-                </ul>
-            </nav>
-            
-            <!-- Sidebar: Lịch hẹn -->
-            <style>
+            <div>
+                <h2>Phòng khám TH</h2>
+                <nav>
+                    <ul>
+                        <li><a href="../../index.php"><i class="fas fa-home"></i> Trang chủ</a></li>
+                        <li class="active"><a href="#"><i class="fas fa-id-card"></i> Hồ sơ</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="appointment-history" style="margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-history"></i> Lịch sử đặt lịch</h3>
+                    </div>
 
-</style>
+                    <?php 
+                    if (isset($_SESSION['msg_success'])) {
+                        echo '<p style="color: green; font-weight: bold; font-size: 0.9em;">' . $_SESSION['msg_success'] . '</p>';
+                        unset($_SESSION['msg_success']);
+                    }
+                    if (isset($_SESSION['msg_error'])) {
+                        echo '<p style="color: red; font-weight: bold; font-size: 0.9em;">' . $_SESSION['msg_error'] . '</p>';
+                        unset($_SESSION['msg_error']);
+                    }
+                    ?>
 
-<div class="appointment-history">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3><i class="fas fa-history"></i> Lịch sử đặt lịch</h3>
-    </div>
+                    <?php if ($history_res && $history_res->num_rows > 0): ?>
+                        <?php while($row = $history_res->fetch_assoc()): 
+                            $date_obj = strtotime($row['NgayHen']);
+                            $ngay = date('d', $date_obj);
+                            $thangNam = "Th" . date('m, Y', $date_obj);
+                            $gio = date('H:i', $date_obj);
+                            
+                            $status_class = 'status-default';
+                            $status_text = $row['TrangThai'];
+                            
+                            switch($row['TrangThai']) {
+                                case 'HoanThanh': $status_class = 'status-hoanthanh'; $status_text = 'Hoàn thành'; break;
+                                case 'ChoXacNhan': $status_class = 'status-choxacnhan'; $status_text = 'Chờ xác nhận'; break;
+                                case 'DaHuy': $status_class = 'status-dahuy'; $status_text = 'Đã hủy'; break;
+                                case 'DaXacNhan': $status_class = 'status-choxacnhan'; $status_text = 'Đã xác nhận'; break;
+                            }
+                        ?>
+                            <div class="appointment-card" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                                <div style="width: 55px; text-align: center; background: #f7fafc; padding: 8px; border-radius: 8px; margin-right: 12px;">
+                                    <div style="font-weight: bold; font-size: 1.1em; color: #2d3748;"><?= $ngay ?></div>
+                                    <div style="font-size: 0.65em; color: #718096; text-transform: uppercase;"><?= $thangNam ?></div>
+                                </div>
 
-    <?php if ($history_res && $history_res->num_rows > 0): ?>
-        <?php while($row = $history_res->fetch_assoc()): 
-            // Xử lý thời gian
-            $date_obj = strtotime($row['NgayHen']);
-            $ngay = date('d', $date_obj);
-            $thangNam = "Th" . date('m, Y', $date_obj);
-            $gio = date('H:i', $date_obj);
-            
-            // Xử lý màu sắc trạng thái
-            $status_class = 'status-default';
-            $status_text = $row['TrangThai'];
-            
-            switch($row['TrangThai']) {
-                case 'HoanThanh': $status_class = 'status-hoanthanh'; $status_text = 'Hoàn thành'; break;
-                case 'ChoXacNhan': $status_class = 'status-choxacnhan'; $status_text = 'Chờ xác nhận'; break;
-                case 'DaHuy': $status_class = 'status-dahuy'; $status_text = 'Đã hủy'; break;
-                case 'DaXacNhan': $status_class = 'status-choxacnhan'; $status_text = 'Đã xác nhận'; break;
-            }
-        ?>
-            <div class="appointment-card">
-                <div style="width: 60px; text-align: center; background: #f7fafc; padding: 10px; border-radius: 10px; margin-right: 20px;">
-                    <div style="font-weight: bold; font-size: 1.2em; color: #2d3748;"><?= $ngay ?></div>
-                    <div style="font-size: 0.7em; color: #718096; text-transform: uppercase;"><?= $thangNam ?></div>
-                </div>
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0; color: #2d3748; font-size:0.95em;"><?= htmlspecialchars($row['TenChuyenKhoa'] ?? 'Khám Nội') ?></h4>
+                                    <p style="margin: 4px 0; color: #718096; font-size: 0.85em;">
+                                        <i class="fas fa-user-md"></i> BS. <?= htmlspecialchars($row['TenBacSi']) ?>
+                                    </p>
+                                    <p style="margin: 2px 0 0; color: #a0aec0; font-size: 0.8em;">
+                                        <i class="far fa-clock"></i> Giờ: <?= $gio ?>
+                                    </p>
+                                </div>
 
-                <div style="flex: 1;">
-                    <h4 style="margin: 0; color: #2d3748;"><?= htmlspecialchars($row['TenChuyenKhoa'] ?? 'Khám Nội') ?></h4>
-                    <p style="margin: 5px 0 0; color: #718096; font-size: 0.9em;">
-                        <i class="fas fa-user-md"></i> BS. <?= htmlspecialchars($row['TenBacSi']) ?>
-                    </p>
-                    <p style="margin: 2px 0 0; color: #a0aec0; font-size: 0.85em;">
-                        <i class="far fa-clock"></i> Giờ hẹn: <?= $gio ?>
-                    </p>
-                </div>
-
-                <div style="text-align: right;">
-                    <span class="status-badge <?= $status_class ?>">
-                        <?= $status_text ?>
-                    </span>
+                                <div style="text-align: right;">
+                                    <span class="status-badge <?= $status_class ?>">
+                                        <?= $status_text ?>
+                                    </span>
+                                    
+                                    <?php if ($row['TrangThai'] == 'ChoXacNhan' || $row['TrangThai'] == 'DaXacNhan'): ?>
+                                        <br>
+                                        <a href="?cancel_id=<?= $row['MaLichHen'] ?>" class="btn-cancel" onclick="return confirm('Bạn có chắc chắn muốn hủy lịch hẹn này không?')">Hủy lịch</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0;">
+                            <i class="fas fa-calendar-times" style="font-size: 3em; color: #cbd5e0; margin-bottom: 15px;"></i>
+                            <p style="color: #718096; margin: 0;">Bạn chưa có lịch hẹn nào.</p>
+                            <a href="booking.php" style="display: inline-block; margin-top: 15px; color: #4a90e2; font-weight: bold; text-decoration: none;">Đặt lịch ngay -></a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
-        <?php endwhile; ?>
-    <?php else: ?>
-        <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0;">
-            <i class="fas fa-calendar-times" style="font-size: 3em; color: #cbd5e0; margin-bottom: 15px;"></i>
-            <p style="color: #718096; margin: 0;">Bạn chưa có lịch hẹn nào được ghi nhận.</p>
-            <a href="booking.php" style="display: inline-block; margin-top: 15px; color: #4a90e2; font-weight: bold; text-decoration: none;">Đặt lịch ngay -></a>
-        </div>
-    <?php endif; ?>
-</div>
+
+            <a href="?action=logout" class="logout-link" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?')">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </a>
         </aside>
 
         <main class="main-content">
@@ -159,7 +208,6 @@ $res_appointments = $conn->query($sql_appointments);
                 <h2>Hồ sơ cá nhân</h2>
                 <div id="status-msg"></div>
             </header>
-            
 
             <div class="profile-grid">
                 <div class="left-col">
@@ -245,8 +293,6 @@ $res_appointments = $conn->query($sql_appointments);
                     </section>
                 </div>
 
- 
-
                 <div class="right-col">
                     <section class="card">
                         <h3><i class="fas fa-shield-alt"></i> Bảo mật</h3>
@@ -266,6 +312,8 @@ $res_appointments = $conn->query($sql_appointments);
                             <div class="vital-item"><i class="fas fa-tint"></i> Huyết áp: <b><?php echo $latest_exam['HuyetAp']; ?></b></div>
                             <div class="vital-item"><i class="fas fa-weight"></i> Cân nặng: <b><?php echo $latest_exam['CanNang']; ?> kg</b></div>
                             <div class="vital-item"><i class="fas fa-ruler-vertical"></i> Chiều cao: <b><?php echo $latest_exam['ChieuCao']; ?> cm</b></div>
+                        <?php else: ?>
+                            <p style="color:#a0aec0; font-size:0.9em; margin:0;">Chưa có dữ liệu chỉ số sức khỏe.</p>
                         <?php endif; ?>
                     </section>
                 </div>
@@ -360,6 +408,5 @@ $res_appointments = $conn->query($sql_appointments);
         });
     });
     </script>
-    
 </body>
 </html>

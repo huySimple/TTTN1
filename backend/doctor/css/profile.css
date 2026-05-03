@@ -1,0 +1,30 @@
+ :root {
+            --primary: #006ce3;
+            --bg: #f4f6f9;
+            --text: #334155;
+            --border: #cbd5e1;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 40px 20px; color: var(--text); }
+        .profile-wrapper { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); height: fit-content; }
+        
+        .header-title { display: flex; align-items: center; gap: 10px; font-size: 18px; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 25px; font-weight: bold; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #475569; }
+        .form-group input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .form-group input:disabled { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border: none; border-radius: 6px; font-weight: bold; font-size: 14.5px; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+        .btn-save { background: var(--primary); color: white; margin-top: 5px; }
+        .btn-save:hover { background: #0056b3; }
+        .btn-back { background: #64748b; color: white; max-width: 150px; margin: 20px auto 0 auto; display: flex; }
+        .btn-back:hover { background: #475569; }
+
+        .alert { padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
+        .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        
+        @media(max-width: 768px) {
+            .profile-wrapper { grid-template-columns: 1fr; }
+        }

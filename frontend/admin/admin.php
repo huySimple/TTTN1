@@ -101,10 +101,8 @@ $total_apps_today = $conn->query("SELECT COUNT(*) as total FROM lichhen WHERE DA
                         <div class="stat-info"><span>LỊCH HÔM NAY</span><h2><?= $total_apps_today ?></h2></div>
                         <i class="far fa-calendar-alt"></i>
                     </div>
-                    
-                    
                 </div>
-                 <div class="table-container">
+                <div class="table-container">
                     <h3>Lịch hẹn mới nhất</h3>
                     <table class="data-table">
                         <thead>
@@ -191,30 +189,54 @@ $total_apps_today = $conn->query("SELECT COUNT(*) as total FROM lichhen WHERE DA
 
             <?php elseif ($page == 'patients'): ?>
                 <div class="table-container">
-                    <h2>Danh sách Bệnh nhân <?= $search ? "- Tìm: '$search'" : "" ?></h2>
+                    <div class="table-header">
+                        <h2>Danh sách Bệnh nhân <?= $search ? "- Tìm: '$search'" : "" ?></h2>
+                        <button class="btn-primary-custom" onclick="window.location='../../backend/admin/add_patient.php'">
+                            <i class="fas fa-plus"></i>  Thêm bệnh nhân
+                        </button>
+                    </div>
                     <table class="data-table">
                         <thead>
-                            <tr><th>ID</th><th>Họ Tên</th><th>Số điện thoại</th><th>Giới tính</th><th>Thao tác</th></tr>
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ Tên</th>
+                                <th>Ngày Sinh</th>
+                                <th>Giới Tính</th>
+                                <th>Số Điện Thoại</th>
+                                <th>Nhóm Máu</th>
+                                <th>Thao tác</th>
+                            </tr>
                         </thead>
                         <tbody>
                             <?php
                             $where = $search ? "WHERE HoTen LIKE '%$search%' OR SoDienThoai LIKE '%$search%'" : "";
-                            $res = $conn->query("SELECT * FROM benhnhan $where");
+                            $res = $conn->query("SELECT * FROM benhnhan $where ORDER BY MaBenhNhan DESC");
                             while($row = $res->fetch_assoc()): ?>
                                 <tr>
                                     <td>#<?= $row['MaBenhNhan'] ?></td>
-                                    <td><strong><?= $row['HoTen'] ?></strong></td>
-                                    <td><?= $row['SoDienThoai'] ?></td>
-                                    <td><?= $row['GioiTinh'] ?></td>
+                                    <td><strong><?= htmlspecialchars($row['HoTen']) ?></strong></td>
+                                    <td><?= $row['NgaySinh'] ? date('d/m/Y', strtotime($row['NgaySinh'])) : '<em>Chưa cập nhật</em>' ?></td>
                                     <td>
-                                        <button class="btn-icon edit"><i class="fas fa-edit"></i></button>
-                                        <button class="btn-icon delete"><i class="fas fa-trash"></i></button>
+                                        <span class="gender-tag <?= strtolower($row['GioiTinh']) ?>">
+                                            <?= $row['GioiTinh'] == 'Nu' ? 'Nữ' : ($row['GioiTinh'] == 'Nam' ? 'Nam' : 'Khác') ?>
+                                        </span>
+                                    </td>
+                                    <td><?= htmlspecialchars($row['SoDienThoai']) ?></td>
+                                    <td><?= $row['NhomMau'] ? htmlspecialchars($row['NhomMau']) : '-' ?></td>
+                                    <td>
+                                        <button class="btn-icon edit" onclick="window.location='../../backend/admin/edit_patient.php?id=<?= $row['MaBenhNhan'] ?>'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon delete" onclick="if(confirm('Bạn có chắc chắn muốn xóa bệnh nhân này và tất cả dữ liệu liên quan?')) window.location='../../backend/admin/delete_patient.php?id=<?= $row['MaBenhNhan'] ?>'">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
                 </div>
+
 
             <?php elseif ($page == 'appointments'): ?>
                 <div class="table-container">
@@ -226,7 +248,8 @@ $total_apps_today = $conn->query("SELECT COUNT(*) as total FROM lichhen WHERE DA
                                 <th>Bác Sĩ</th>
                                 <th>Ngày Khám</th>
                                 <th>Trạng Thái</th>
-                                </tr>
+                                <th>Thao tác</th>
+                            </tr>
                         </thead>
                         <tbody>
                             <?php
@@ -241,13 +264,25 @@ $total_apps_today = $conn->query("SELECT COUNT(*) as total FROM lichhen WHERE DA
                                     <td><strong><?= $row['TenBN'] ?></strong></td>
                                     <td><?= $row['TenBS'] ?></td>
                                     <td><?= date('d/m/Y', strtotime($row['NgayHen'])) ?></td>
-                                    <td><span class="status-tag <?= strtolower($row['TrangThai']) ?>"><?= $row['TrangThai'] ?></span></td>
+                                    <td>
+                                        <span class="status-tag <?= strtolower($row['TrangThai']) ?>"><?= $row['TrangThai'] ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($row['TrangThai'] == 'ChoXacNhan'): ?>
+                                            <button class="btn-icon edit" title="Xác nhận lịch hẹn" onclick="if(confirm('Xác nhận lịch hẹn này?')) window.location='../../backend/admin/confirm_appointment.php?id=<?= $row['MaLichHen'] ?>'">
+                                                <i class="fas fa-check-circle" style="color: #28a745;"></i> Xác nhận
+                                            </button>
+                                        <?php else: ?>
+                                            <span style="color: #888; font-size: 0.9rem;">-</span>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
                 </div>
-                <?php elseif ($page == 'specialties'): ?>
+                
+            <?php elseif ($page == 'specialties'): ?>
                 <div class="table-container">
                     <div class="table-header">
                         <h2>Danh sách Chuyên khoa <?= $search ? "- Tìm: '$search'" : "" ?></h2>
@@ -292,6 +327,7 @@ $total_apps_today = $conn->query("SELECT COUNT(*) as total FROM lichhen WHERE DA
 
         </div>
     </main>
+    
 </div>
 </body>
 </html>

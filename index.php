@@ -21,10 +21,10 @@ include 'backend/config/connect.php';
             <div class="logo">Phòng khám TH</div>
             <ul class="nav-links">
                 <li><a href="index.php" class="active">Trang chủ</a></li>
-                <li><a href="#">Dịch vụ</a></li>
-                <li><a href="#">Bác sĩ</a></li>
-                <li><a href="#">Chuyên khoa</a></li>
-                <li><a href="https://suckhoedoisong.vn/y-te.htm">Tin tức</a></li>
+                <li><a href="frontend/services.php">Dịch vụ</a></li>
+                <li><a href="frontend/doctors.php">Bác sĩ</a></li>
+                <li><a href="frontend/specialties.php">Chuyên khoa</a></li>
+                <li><a href="https://suckhoedoisong.vn/y-te.htm"target="_blank">Tin tức</a></li>
             </ul>
             <div class="nav-right">
                 <i class="far fa-bell icon-btn"></i>           
